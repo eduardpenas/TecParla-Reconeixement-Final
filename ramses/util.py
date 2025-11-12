@@ -11,6 +11,7 @@ def leeList (fitLis):
             lista.append(linea.strip())
     return lista
 
+
 def pathName(dir, name: str, ext):
     if ext[0] != '.': ext = f".{ext}"
     if name.startswith(dir): name = name[len(dir)+1:]
