@@ -4,7 +4,7 @@ from prm import *
 from mar import *
 
 def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui):
-    unidades: leeLis(lisUni)
+    unidades = leeLis(lisUni)
     
     # Inicializamos el modelo 
     modelo = {}
@@ -35,4 +35,4 @@ def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui):
     chkPathName(ficMod)
     with open(ficMod, "wb") as fpMod:
         np.save(fpMod, modelo)
-         
+
