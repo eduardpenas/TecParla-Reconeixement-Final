@@ -33,6 +33,5 @@ def chkPathName(pathName):
     Crea el directorio del fichero 'pathName' si es necesario
     """
     Path(pathName).parent.mkdir(parents=True , exist_ok=True)
-    #  Así crea a los padres y no se queja si existe
 
     
