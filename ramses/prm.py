@@ -5,6 +5,6 @@ def escrPrm(pathPrm, prm):
         np.save(fpPrm, prm)
 
 
-def leePrm(pathPrm):
-    with open(pathPrm, "wb") as fpPrm:
+def leePrm(pathPrm): 
+    with open(pathPrm, "rb") as fpPrm:
         return np.load(fpPrm)

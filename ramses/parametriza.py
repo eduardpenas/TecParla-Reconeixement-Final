@@ -3,8 +3,8 @@ import numpy as np
 from util import *
 from prm import *
 
-def parametriza(dirPrm, dirSen, guiSen):
-    for nomSen in leeLis(guiSen):
+def parametriza(dirPrm, dirSen, *guiSen):
+    for nomSen in leeLis(*guiSen):
         pathSen = pathName(dirSen, nomSen, "wav")
         sen, fm = sf.read(pathSen)
 
