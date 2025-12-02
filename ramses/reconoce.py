@@ -1,7 +1,10 @@
+#! /usr/bin/env python3
+
 import numpy as np
 
-from util import * 
-from prm import * 
+from tqdm import tqdm  
+from ramses.util import * 
+from ramses.prm import * 
 
 def reconoce(dirRec, dirPrm, ficMod, *guiSen):
     """
@@ -9,7 +12,7 @@ def reconoce(dirRec, dirPrm, ficMod, *guiSen):
     """
     modelos = np.load(ficMod, allow_pickle=True).item()
 
-    for señal in leeLis(*guiSen):
+    for señal in tqdm(leeLis(*guiSen),ascii='·|/-\\#'):
         pathPrm = pathName(dirPrm, señal, 'prm')
         prm = leePrm(pathPrm)
 
@@ -23,4 +26,5 @@ def reconoce(dirRec, dirPrm, ficMod, *guiSen):
         pathRec = pathName(dirRec, señal, '.rec')
         chkPathName(pathRec)
         with open(pathRec, 'wt') as fpRec: 
-            fpRec.write(f'LBO:,,,{reconocida}\n')      
+            fpRec.write(f'LBO:,,,{reconocida}\n') 
+         

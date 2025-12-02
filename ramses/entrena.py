@@ -1,7 +1,10 @@
+#! /usr/bin/env python3
+
 import numpy as np
-from util import *
-from prm import * 
-from mar import * 
+from ramses.util import *
+from ramses.prm import * 
+from ramses.mar import * 
+from tqdm import tqdm
 
 def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui):
     """
@@ -17,7 +20,7 @@ def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui):
     numUni = {unidad : 0 for unidad in unidades}
 
     # Bucle para todas las señales de entrenamiento 
-    for señal in leeLis(*ficGui): 
+    for señal in tqdm(leeLis(*ficGui)): 
         # leemos la señal y el contenido del fichero de marcas
         pathPrm = pathName(dirPrm, señal, 'prm')
         prm = leePrm(pathPrm)
@@ -37,6 +40,8 @@ def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui):
     with open(ficMod, 'wb') as fpMod: 
         np.save(fpMod,modelo)    
 
+if __name__ =='__main__':
+        entrena("prm", "Sen","Lis/vocales.lis","mod/modelo.mod","Gui/train.gui")
 
 
 

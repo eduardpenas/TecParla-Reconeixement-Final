@@ -1,13 +1,15 @@
-from util import * 
-from mar import * 
+#! /usr/bin/env python3
 
+from ramses.util import *
+from ramses.mar import *  
+from tqdm import tqdm
 def evalua(dirRec, dirMar, *guiSen):
     """
     Calcula la tasa de exactitud en el reconocimiento 
     """
     matCnf = {}
     lisPal = set()
-    for sen in leeLis(*guiSen):
+    for sen in tqdm(leeLis(*guiSen)):
         pathRec = pathName(dirRec, sen, '.rec')
         rec = cogeTrn(pathRec)
         pathMar = pathName(dirMar, sen, '.mar')
@@ -41,3 +43,5 @@ def evalua(dirRec, dirMar, *guiSen):
                 corr += matCnf[mar][rec]
     print(f'exact = {corr/total:.2%}')
 
+if __name__ =='__main__':
+        evalua('Rec','Sen','Gui/train.gui')
