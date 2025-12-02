@@ -2,9 +2,9 @@
 
 import numpy as np
 
-from tqdm import tqdm  
 from ramses.util import * 
 from ramses.prm import * 
+from tqdm import tqdm
 
 def reconoce(dirRec, dirPrm, ficMod, *guiSen):
     """
@@ -12,7 +12,7 @@ def reconoce(dirRec, dirPrm, ficMod, *guiSen):
     """
     modelos = np.load(ficMod, allow_pickle=True).item()
 
-    for señal in tqdm(leeLis(*guiSen),ascii='·|/-\\#'):
+    for señal in tqdm(leeLis(*guiSen), ascii="·|/-\\#"):
         pathPrm = pathName(dirPrm, señal, 'prm')
         prm = leePrm(pathPrm)
 

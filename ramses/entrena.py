@@ -4,7 +4,6 @@ import numpy as np
 from ramses.util import *
 from ramses.prm import * 
 from ramses.mar import * 
-from tqdm import tqdm
 
 def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui):
     """

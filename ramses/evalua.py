@@ -1,5 +1,8 @@
 #! /usr/bin/env python3
 
+from ramses.util import * 
+from ramses.mar import * 
+
 from ramses.util import *
 from ramses.mar import *  
 from tqdm import tqdm
@@ -35,13 +38,10 @@ def evalua(dirRec, dirMar, *guiSen):
             print(f'\t{conf}',end='')
         print()
 
-    total = corr = 0
-    for mar in lisPal: 
+    total = cor = 0
+    for mar in lisPal:
         for rec in lisPal:
             total += matCnf[mar][rec]
-            if mar == rec: 
-                corr += matCnf[mar][rec]
-    print(f'exact = {corr/total:.2%}')
-
-if __name__ =='__main__':
-        evalua('Rec','Sen','Gui/train.gui')
+            if mar == rec:
+                cor += matCnf[mar][rec]
+    print(f'exact = {cor/total}')
