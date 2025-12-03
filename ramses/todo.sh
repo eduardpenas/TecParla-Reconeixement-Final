@@ -6,17 +6,15 @@ DIR_WRK=.
 
 DIR_LOG=$DIR_WRK/Log
 FIC_LOG=$DIR_LOG/$(basename $0 .sh).$NOM.log
-[ -d $DIR_LOG] || mkdir -p $DIR_LOG
+[ -d $DIR_LOG ] || mkdir -p $DIR_LOG
 
 exec > >(tee $FIC_LOG) 2>&1
 
-hostname >> $FIC_LOG
-pwd 
-date
+hostname >> FIC_LOG
+pwd
+date 
 
-
-
-#ficheros guia
+#Ficheros guia
 
 DIR_GUI=$DIR_WRK/Gui
 GUI_ENT=$DIR_GUI/train.gui
@@ -33,7 +31,7 @@ LIS_MOD=$DIR_WRK/Lis/vocales.lis
 FIC_RES=$DIR_WRK/Res/$NOM.res
 [ -d $(dirname $FIC_RES) ] || mkdir -p $(dirname $FIC_RES)
 
-#Parametrización
+# Parametrización
 
 dirSen="-s $DIR_SEN"
 dirPrm="-p $DIR_PRM"
@@ -41,8 +39,5 @@ dirPrm="-p $DIR_PRM"
 EXEC="parametriza.py $dirSen $dirPrm $GUI_ENT $GUI_DEV"
 echo $EXEC && $EXEC || exit 1
 
-
-
-
 date
-echo sacabao
+echo sacabao, chula
