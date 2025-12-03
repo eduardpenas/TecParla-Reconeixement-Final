@@ -36,8 +36,8 @@ if __name__ == "__main__":
             {sys.argv[0]} --version
 
         options:
-            -s, --dirSen  DIRECTORI  directori de la señal d' entrada [default: .]
-            -p, --dirPrm  DIRECTORI  directori de la señal parametrizada [default: .]
+            -s, --dirSen DIRECTORI  directori de la señal d' entrada [default: .]
+            -p, --dirPrm DIRECTORI  directori de la señal parametrizada [default: .]
         """
     args= docopt(usage, version="tecparla2025")
     dirSen = args["--dirSen"]
