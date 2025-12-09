@@ -1,11 +1,7 @@
 #! /usr/bin/env python3
 
 import numpy as np
-<<<<<<< HEAD
-from tqdm import tqdm 
-=======
 from tqdm import tqdm
->>>>>>> 4b315c583d5d7a36b62f8a7b8834dc5e479ff2a9
 
 from ramses.util import *
 from ramses.prm import * 
@@ -45,22 +41,12 @@ def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui):
     with open(ficMod, 'wb') as fpMod: 
         np.save(fpMod,modelo)    
 
-<<<<<<< HEAD
-if __name__ =='__main__':
-        from docopt import docopt
-        import sys
-
-
-        usage =f"""
-Entrena un modelo acústico para el reconocimiento de las vocales 
-=======
 if __name__ == "__main__":
     from docopt import docopt
     import sys
 
     usage=f"""
 Entrena un modelo acústico para el reconocimento de las vocales
->>>>>>> 4b315c583d5d7a36b62f8a7b8834dc5e479ff2a9
 
 usage:
     {sys.argv[0]} [options] <guia> ...
@@ -69,25 +55,6 @@ usage:
 
 options:
     -p, --dirPrm PATH  Directorio con las señales parametrizadas [default: .]
-<<<<<<< HEAD
-    -m, --dirMar PATH  Directorio con el contenido fonético de las señales [default: .]
-    -l, --lisUni PATH  Fichero con la lista de unidades fonéticas [default: Lis/vocales.lis]
-    -M, --ficMod PATH  Fichero con el modelo resultante [default: Mod/vocales.mod]
-"""
-        args =docopt(usage, version='tecparla2025')
-        dirPrm = args['--dirPrm']
-        dirMar= args['--dirMar']
-        lisUni= args['--lisUni']
-        ficMod = args['--ficMod']
-        ficGui =args['<guia>']
-        entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui)
-
-        
-
-
-            
-
-=======
     -m, --dirMar PATH  Directorio con el contenido del fonético de las señales [default: .]
     -l, --lisUni PATH  Fichero con la lista de unidades fométicas [default: Lis/vocales.lis]
     -M, --ficMod PATH  Fichero con el modelo resultante [default: Mod/vocales.mod]
@@ -100,7 +67,6 @@ options:
     ficMod = args["--ficMod"]
     ficGui = args["<guia>"]
     entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui)
->>>>>>> 4b315c583d5d7a36b62f8a7b8834dc5e479ff2a9
 
 
 

@@ -47,33 +47,6 @@ def evalua(dirRec, dirMar, *guiSen):
                 cor += matCnf[mar][rec]
     print(f'exact = {cor/total:.2%}')
 
-<<<<<<< HEAD
-if __name__ == '__main__':
-    from docopt import docopt
-    import sys
-    Sinopsis = f"""
-Evalua el resultado de un reconocimiento
-Usage:
-    {sys.argv[0]} [options] <guiSen>...
-    {sys.argv[0]} -h | --help
-    {sys.argv[0]} --version
-
-Opciones:
-    -r PATH, --dirRec=PATH  Directorio con los ficheros del resultado [default: .]
-    -a PATH, --dirMar=PATH  Directorio con los ficheros de marcas [default: .]
-Argumentos:
-    <guiSen> Nombre del fichero guía con los nombres de las señales reconocidas.
-             Pueden especificarse tantos ficheros guía como sea necesario.
-Evaluación:
-    Siendo OK el número de unidades reconocidas correctamente y KO el de errores,
-    el programa saca por pantalla la exactitud calculada como OK / (OK + KO)
-"""
-    args = docopt(Sinopsis, version=f'{sys.argv[0]}: Ramses v3.4 (2020)')
-    dirRec = args['--dirRec']
-    dirMar = args['--dirMar']
-    guiSen = args['<guiSen>']
-    evalua(dirRec, dirMar, *guiSen)
-=======
 if __name__ == "__main__":
     from docopt import docopt
     import sys
@@ -102,4 +75,3 @@ options:
 
 
 
->>>>>>> 4b315c583d5d7a36b62f8a7b8834dc5e479ff2a9
