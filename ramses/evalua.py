@@ -2,6 +2,7 @@
 
 from ramses.util import * 
 from ramses.mar import * 
+from tqdm import tqdm
 
 from ramses.util import *
 from ramses.mar import *  
@@ -46,6 +47,7 @@ def evalua(dirRec, dirMar, *guiSen):
                 cor += matCnf[mar][rec]
     print(f'exact = {cor/total:.2%}')
 
+<<<<<<< HEAD
 if __name__ == '__main__':
     from docopt import docopt
     import sys
@@ -71,3 +73,33 @@ Evaluación:
     dirMar = args['--dirMar']
     guiSen = args['<guiSen>']
     evalua(dirRec, dirMar, *guiSen)
+=======
+if __name__ == "__main__":
+    from docopt import docopt
+    import sys
+
+    usage=f"""
+
+
+usage:
+    {sys.argv[0]} [options] <guia> ...
+    {sys.argv[0]} -h | --help
+    {sys.argv[0]} --version
+
+options:
+    -r, --dirRec PATH  Directorio con los ficheros del resultado [default: .]
+    -m, --dirMar PATH  Directorio con el contenido del fonético de las señales [default: .]
+"""
+    
+    args = docopt(usage, version="tecparla2025")
+    dirRec = args["--dirRec"]
+    dirMar = args["--dirMar"]
+    guiSen = args["<guia>"]
+    evalua(dirRec, dirMar, *guiSen)
+
+    
+
+
+
+
+>>>>>>> 4b315c583d5d7a36b62f8a7b8834dc5e479ff2a9

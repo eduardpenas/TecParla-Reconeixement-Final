@@ -27,6 +27,7 @@ def reconoce(dirRec, dirPrm, ficMod, *guiSen):
         pathRec = pathName(dirRec, señal, '.rec')
         chkPathName(pathRec)
         with open(pathRec, 'wt') as fpRec: 
+<<<<<<< HEAD
             fpRec.write(f'LBO:,,,{reconocida}\n') 
 
 
@@ -60,3 +61,35 @@ Argumentos:
     ficMod = args['--ficMod']
     guiSen = args['<guiSen>']
     reconoce(dirRec, dirPrm, ficMod, *guiSen)  
+=======
+            fpRec.write(f'LBO:,,,{reconocida}\n')  
+
+if __name__ == "__main__":
+    from docopt import docopt
+    import sys
+
+    usage=f"""
+Reconoce una base de datos de señales parametrizadas 
+
+usage:
+    {sys.argv[0]} [options] <guia> ...
+    {sys.argv[0]} -h | --help
+    {sys.argv[0]} --version
+
+options:
+    -r, --dirRec PATH  Directorio con los ficheros del resultado [default: .]
+    -p, --dirPrm PATH  Directorio con las señales parametrizadas [default: .]
+    -M, --ficMod PATH  Fichero con el modelo resultante [default: Mod/vocales.mod]
+"""
+    
+    args = docopt(usage, version="tecparla2025")
+    dirRec = args["--dirRec"]
+    dirPrm = args["--dirPrm"]
+    ficMod = args["--ficMod"]
+    guiSen = args["<guia>"]
+    reconoce(dirRec, dirPrm, ficMod, *guiSen)
+
+
+
+    
+>>>>>>> 4b315c583d5d7a36b62f8a7b8834dc5e479ff2a9
