@@ -66,6 +66,7 @@ options:
     lisUni = args["--lisUni"]
     ficMod = args["--ficMod"]
     ficGui = args["<guia>"]
+    
     entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui)
 
 

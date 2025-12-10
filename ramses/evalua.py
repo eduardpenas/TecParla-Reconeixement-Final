@@ -30,7 +30,7 @@ def evalua(dirRec, dirMar, *guiSen):
         print(f'{mar}',end='')
         for rec in sorted(lisPal):
             if mar in matCnf and rec in matCnf[mar]:
-                conf = matCnf[mar][rec]
+                conf = matCnf[mar][rec] 
             else : 
                 conf = 0
             print(f'\t{conf}',end='')
@@ -39,9 +39,9 @@ def evalua(dirRec, dirMar, *guiSen):
     total = cor = 0
     for mar in lisPal:
         for rec in lisPal:
-            total += matCnf[mar][rec]
+            total += matCnf[mar][rec] if mar in matCnf and rec in matCnf[mar] else 0
             if mar == rec:
-                cor += matCnf[mar][rec]
+                cor += matCnf[mar][rec] if mar in matCnf and rec in matCnf[mar] else 0
     print(f'exact = {cor/total:.2%}')
 
 if __name__ == "__main__":
