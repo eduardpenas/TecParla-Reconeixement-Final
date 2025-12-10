@@ -4,6 +4,9 @@ from ramses.util import *
 from ramses.mar import * 
 from tqdm import tqdm
 
+from ramses.util import *
+from ramses.mar import *  
+from tqdm import tqdm
 def evalua(dirRec, dirMar, *guiSen):
     """
     Calcula la tasa de exactitud en el reconocimiento 

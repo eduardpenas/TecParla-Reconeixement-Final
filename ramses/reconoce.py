@@ -1,10 +1,11 @@
 #! /usr/bin/env python3
 
 import numpy as np
+from tqdm import tqdm
 
 from ramses.util import * 
 from ramses.prm import * 
-from tqdm import tqdm
+
 
 def reconoce(dirRec, dirPrm, ficMod, *guiSen):
     """

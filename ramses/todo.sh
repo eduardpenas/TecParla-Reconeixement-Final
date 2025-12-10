@@ -23,7 +23,8 @@ GUI_DEV=$DIR_GUI/devel.gui
 DIR_SEN=$DIR_WRK/Sen
 DIR_MAR=$DIR_WRK/Sen
 DIR_PRM=$DIR_WRK/Prm/$NOM
-FIC_MOD=$DIR_WRK/Mod/$NOM.mod
+DIR_MOD=$DIR_WRK/Mod/$NOM
+FIC_MOD=$DIR_MOD/vocales.mod
 DIR_REC=$DIR_WRK/Rec/$NOM
 
 LIS_MOD=$DIR_WRK/Lis/vocales.lis

@@ -24,7 +24,7 @@ def parametriza(dirPrm, dirSen, *guiSen, funkPrm="np.array"):
         chkPathName(pathPrm)
         escrPrm(pathPrm, prm)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     from docopt import docopt
     import sys
 
