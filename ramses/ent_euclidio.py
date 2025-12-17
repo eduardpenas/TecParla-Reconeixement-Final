@@ -6,21 +6,19 @@ from tqdm import tqdm
 from ramses.util import *
 from ramses.prm import * 
 from ramses.mar import * 
-from ramses.mod import *
-from ramses.euclidio import Euclidio
-from ramses.gaussiano import Gauss
 
-def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui, ClsMod=Gauss):
+def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui):
     """
     Entrena el modelo acústico
     """
     unidades = leeLis(lisUni)
 
     # Inicializamos el modelo 
-    modelo = ClsMod(lisMod=lisUni)
+    modelo = {}
 
     # Inicializamos el entrenamiento 
-    modelo.inicMod()
+    total = {unidad : 0 for unidad in unidades}
+    numUni = {unidad : 0 for unidad in unidades}
 
     # Bucle para todas las señales de entrenamiento 
     for señal in tqdm(leeLis(*ficGui)): 
@@ -31,13 +29,17 @@ def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui, ClsMod=Gauss):
         unidad =cogeTrn(pathMar)
 
         #Actualizamos la información del entrenamiento 
-        modelo += prm, unidad
+        total[unidad] += prm
+        numUni[unidad] +=1 
 
     # Recalculamos el modelo 
-    modelo.calcMod()
+    for unidad in unidades:
+        modelo[unidad] = total[unidad] / numUni[unidad]
 
-    # Escribimos el modelo resultante
-    modelo.escMod(ficMod)   
+    # Escribimos el modelo representante
+    chkPathName(ficMod)
+    with open(ficMod, 'wb') as fpMod: 
+        np.save(fpMod,modelo)    
 
 if __name__ == "__main__":
     from docopt import docopt
@@ -56,8 +58,6 @@ options:
     -m, --dirMar PATH  Directorio con el contenido del fonético de las señales [default: .]
     -l, --lisUni PATH  Fichero con la lista de unidades fométicas [default: Lis/vocales.lis]
     -M, --ficMod PATH  Fichero con el modelo resultante [default: Mod/vocales.mod]
-    -e, --execPrev SCRIPT  script de ejecución previa 
-    -C, --classMod CLASS  Clase que implementa el modelado acústico
 """
     
     args = docopt(usage, version="tecparla2025")
@@ -66,10 +66,8 @@ options:
     lisUni = args["--lisUni"]
     ficMod = args["--ficMod"]
     ficGui = args["<guia>"]
-    if args["--execPrev"]: exec(open(args["--execPrev"]).read())
-    clsMod = eval(args["--classMod"]) if args ["--classMod"] else Modelo
     
-    entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui, ClsMod=clsMod)
+    entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui)
 
 
 

@@ -5,22 +5,24 @@ from tqdm import tqdm
 
 from ramses.util import * 
 from ramses.prm import * 
-from ramses.mod import *
-from ramses.euclidio import Euclidio
-from ramses.gaussiano import Gauss
 
 
-def reconoce(dirRec, dirPrm, ficMod, *guiSen, ClsMod=Gauss):
+def reconoce(dirRec, dirPrm, ficMod, *guiSen):
     """
     Reconoce la unidad cuyo modelo se ajusta mejor
     """
-    modelo = ClsMod(pathMod=ficMod)
+    modelos = np.load(ficMod, allow_pickle=True).item()
 
     for señal in tqdm(leeLis(*guiSen), ascii="·|/-\\#"):
         pathPrm = pathName(dirPrm, señal, 'prm')
         prm = leePrm(pathPrm)
 
-        reconocida = modelo (prm)
+        minDist = np.inf 
+        for modelo in modelos:
+            distancia = sum(abs(prm -modelos[modelo])**2)
+            if distancia < minDist:
+                minDist = distancia
+                reconocida = modelo 
 
         pathRec = pathName(dirRec, señal, '.rec')
         chkPathName(pathRec)
@@ -43,8 +45,6 @@ options:
     -r, --dirRec PATH  Directorio con los ficheros del resultado [default: .]
     -p, --dirPrm PATH  Directorio con las señales parametrizadas [default: .]
     -M, --ficMod PATH  Fichero con el modelo resultante [default: Mod/vocales.mod]
-    -e, --execPrev SCRIPT  script de ejecución previa 
-    -C, --classMod CLASS  Clase que implementa el modelado acústico
 """
     
     args = docopt(usage, version="tecparla2025")
@@ -52,9 +52,7 @@ options:
     dirPrm = args["--dirPrm"]
     ficMod = args["--ficMod"]
     guiSen = args["<guia>"]
-    if args["--execPrev"]: exec(open(args["--execPrev"]).read())
-    clsMod = eval(args["--classMod"]) if args ["--classMod"] in args else Modelo
-    reconoce(dirRec, dirPrm, ficMod, *guiSen, ClsMod=clsMod)
+    reconoce(dirRec, dirPrm, ficMod, *guiSen)
 
 
 
