@@ -17,7 +17,7 @@ def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui, ClsMod=Gauss):
     unidades = leeLis(lisUni)
 
     # Inicializamos el modelo 
-    modelo = ClsMod(lisMod=lisUni)
+    modelo = Gauss(lisMod=lisUni)
 
     # Inicializamos el entrenamiento 
     modelo.inicMod()

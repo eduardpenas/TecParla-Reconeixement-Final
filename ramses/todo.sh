@@ -10,7 +10,7 @@ FIC_LOG=$DIR_LOG/$(basename $0 .sh).$NOM.log
 
 exec > >(tee $FIC_LOG) 2>&1
 
-hostname >> FIC_LOG
+hostname
 pwd
 date 
 

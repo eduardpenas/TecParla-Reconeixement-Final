@@ -14,7 +14,7 @@ def reconoce(dirRec, dirPrm, ficMod, *guiSen, ClsMod=Gauss):
     """
     Reconoce la unidad cuyo modelo se ajusta mejor
     """
-    modelo = ClsMod(pathMod=ficMod)
+    modelo = Gauss(pathMod=ficMod)
 
     for señal in tqdm(leeLis(*guiSen), ascii="·|/-\\#"):
         pathPrm = pathName(dirPrm, señal, 'prm')
