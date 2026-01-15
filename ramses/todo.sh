@@ -43,7 +43,7 @@ FUNK_PRM=cepstrum
 
 if [ $FUNK_PRM == periodograma ]; then
     EXEC_PREV=$DIR_PRM/$FUNK_PRM
-    EPS=${1:-0}
+    EPS=${1:-1e-12}
 
     [ -d $(dirname $EXEC_PREV) ] || mkdir -p $(dirname $FIC_RES)
     echo "import numpy as np" | tee $EXEC_PREV
