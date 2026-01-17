@@ -4,17 +4,15 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 
-# --- CONFIGURACIÓN ---
 SRC_DIR = "ramses"
 DATA_DIR = "."
 CMD_PYTHON = "python3"
 os.environ["PYTHONPATH"] = os.environ.get("PYTHONPATH", "") + os.pathsep + os.path.abspath(SRC_DIR)
 
 def run_gmm_pipeline(nmix, run_name):
-    """Pipeline MFCC fijo + GMM variable"""
     print(f"--- Ejecutando GMM: Nmix={nmix} ---")
     
-    prm_dir = os.path.join(DATA_DIR, "Prm", "mfcc_optimo") # Reutilizamos parametrización si existe
+    prm_dir = os.path.join(DATA_DIR, "Prm", "mfcc_optimo") 
     mod_dir = os.path.join(DATA_DIR, "Mod", run_name)
     rec_dir = os.path.join(DATA_DIR, "Rec", run_name)
     res_file = os.path.join(DATA_DIR, "Res", run_name + ".res")
@@ -28,27 +26,32 @@ def run_gmm_pipeline(nmix, run_name):
     vocales_mod = os.path.join(mod_dir, "vocales.mod")
     sen_dir = os.path.join(DATA_DIR, "Sen")
 
-    # 1. Parametrización (Solo si no existe ya, usamos la optima MFCC 18, 20)
-    # Si quieres asegurar, borra Prm/mfcc_optimo antes.
+    # 1. Parametrización MFCC optima (NumCep=18, NFilt=20)
     exec_prev = os.path.join(prm_dir, "MFCC_opt.py")
-    if not os.path.exists(exec_prev):
+    if not os.path.exists(exec_prev) or not os.path.exists(prm_dir):
         with open(exec_prev, "w") as f:
             f.write("import numpy as np\nfrom python_speech_features import mfcc\n")
             f.write("def get_mfcc(x):\n")
+            # MFCC devuelve matriz (Tramos, Coefs). NO HACEMOS MEDIA AQUÍ para GMM.
+            # GMM necesita la nube de puntos completa.
             f.write("    feat = mfcc(x, samplerate=8000, winlen=0.025, winstep=0.01, numcep=18, nfilt=20)\n")
-            f.write("    return np.mean(feat, axis=0)\n") # Importante: devuelve vector
+            f.write("    return feat\n") 
             
         cmd_prm = [CMD_PYTHON, os.path.join(SRC_DIR, "parametriza.py"), "-s", sen_dir, "-p", prm_dir, "-f", "get_mfcc", "-e", exec_prev, train_gui, devel_gui]
         subprocess.run(cmd_prm, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    # 2. Entrenamiento GMM (Aquí pasamos el parametro nmix)
+    # 2. Entrenamiento GMM
     cmd_train = [CMD_PYTHON, os.path.join(SRC_DIR, "entrena.py"), 
                  "-p", prm_dir, "-m", sen_dir, "-l", vocales_lis, "-M", vocales_mod, 
-                 train_gui, "--nmix", str(nmix), "--iter", "20"]
+                 "--classMod", "GMM", "--nmix", str(nmix), "--iter", "10",
+                 train_gui]
     subprocess.run(cmd_train, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     
-    # 3. Reconocimiento
-    cmd_rec = [CMD_PYTHON, os.path.join(SRC_DIR, "reconoce.py"), "-r", rec_dir, "-p", prm_dir, "-M", vocales_mod, devel_gui]
+    # 3. Reconocimiento GMM
+    cmd_rec = [CMD_PYTHON, os.path.join(SRC_DIR, "reconoce.py"), 
+               "-r", rec_dir, "-p", prm_dir, "-M", vocales_mod, 
+               "--classMod", "GMM",
+               devel_gui]
     subprocess.run(cmd_rec, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     
     # 4. Evaluar
@@ -70,11 +73,10 @@ def experiment_nmix():
 
     plt.figure(figsize=(10, 6))
     plt.plot(nmixes, results, marker='D', linewidth=2, color='green')
-    plt.title("Exactitud vs Número de Gaussianas (MFCC Optimo)")
-    plt.xlabel("Número de Gaussianas por Mezcla")
+    plt.title("Exactitud vs Número de Gaussianas (MFCC)")
+    plt.xlabel("Número de Gaussianas")
     plt.ylabel("Exactitud (%)")
-    plt.grid(True, linestyle='--')
-    plt.xticks(nmixes)
+    plt.grid(True)
     plt.savefig("gmm_exactitud_vs_nmix.png")
     print(">>> Gráfica guardada: gmm_exactitud_vs_nmix.png")
 

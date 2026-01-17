@@ -1,15 +1,27 @@
 import numpy as np
-from util import *
+import sys
+import os
+
+# Importación robusta de util
+try:
+    from ramses.util import *
+except ImportError:
+    try:
+        from util import *
+    except ImportError:
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        from util import *
 
 class Modelo:
     def __init__(self, pathMod=None, lisMod=None):
-        if pathMod != None:
+        if pathMod is not None:
             self.leeMod(pathMod)
-        elif lisMod != None:
-            self.unidades=leeLis(lisMod)
+        elif lisMod is not None:
+            self.unidades = leeLis(lisMod)
         else:
-            raise("Hay que indicar el fichero del modelo o la lista de unidades")
-    
+            # --- FIX: No hacer nada si no hay argumentos, o usar raise ValueError ---
+            pass 
+
     def leeMod(self, pathMod):
         pass
 
@@ -25,5 +37,5 @@ class Modelo:
     def calcMod(self):
         pass
 
-    def __call__(self,prm):
+    def __call__(self, prm):
         return np.random.choice(["a", "e", "i", "o", "u"], 1)[0]

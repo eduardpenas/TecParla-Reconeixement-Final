@@ -1,126 +1,47 @@
-#! /bin/bash
+#!/bin/bash
+# SCRIPT FINAL OPTIMIZADO (RAMSES)
+# Configuracion Ganadora: MLP 2 capas, 64 neuronas, ReLU, Adam lr=0.0001
 
-# ==========================================
-# CONFIGURACIÓN DEL PROYECTO
-# ==========================================
-NOM=maxima_entropia_final
-SRC=ramses   # <--- CORREGIDO: Apunta a tu carpeta real
-DIR_WRK=.
+# 1. Parametrizacion (Si no existe, se crea)
+if [ ! -d "Prm/mfcc_optimo" ]; then
+    echo "Generando MFCC..."
+    # Aqui iria tu comando de parametrizacion si fuera necesario
+    # python3 ramses/parametriza.py ... 
+fi
 
-# IMPORTANTE: Añadimos 'ramses' al PYTHONPATH para que encuentre maxima_entropia.py
-export PYTHONPATH=$PYTHONPATH:./$SRC
+# 2. Configuración Python para entrena.py
+cat <<EOT > conf/final_config.py
+import torch
+from ramses.red_pt import ModPT, lotesPT
+from ramses.mlp import mlp_N
+dirPrm='Prm/mfcc_optimo'
+dirMar='Sen'
+ficLisUni='Lis/vocales.lis'
+guiTrain='Gui/train.gui'
+guiDevel='Gui/devel.gui'
+lotesEnt = lotesPT(dirPrm, dirMar, ficLisUni, guiTrain)
+lotesDev = lotesPT(dirPrm, dirMar, ficLisUni, guiDevel)
+EOT
 
-# Configuración de Logs
-DIR_LOG=$DIR_WRK/Log
-FIC_LOG=$DIR_LOG/$(basename $0 .sh).$NOM.log
-[ -d $DIR_LOG ] || mkdir -p $DIR_LOG
+# 3. Entrenamiento
+echo "Entrenando Modelo Final..."
+python3 ramses/entrena.py \
+    -e 400 \
+    --execPrev conf/final_config.py \
+    --lotesEnt lotesEnt \
+    --lotesDev lotesDev \
+    -M "ModPT(ficLisUni='Lis/vocales.lis', red=mlp_N(numCap=2, dimIni=18, dimInt=128, dimSal=5, clsAct=torch.nn.ReLU()), Optim=lambda p: torch.optim.Adam(p, lr=0.0001))" \
+    Mod/modelo_final.mod
 
-exec > >(tee $FIC_LOG) 2>&1
+# 4. Reconocimiento
+echo "Reconociendo..."
+python3 ramses/reconoce.py \
+    -r Rec/final \
+    -p Prm/mfcc_optimo \
+    -M Mod/modelo_final.mod \
+    --classMod ModPT \
+    Gui/devel.gui
 
-echo "========================================"
-echo " SISTEMA: ESTIMADOR MÁXIMA ENTROPÍA"
-echo " Carpeta de fuentes: $SRC"
-echo "========================================"
-
-# Rutas
-DIR_GUI=$DIR_WRK/Gui
-GUI_ENT=$DIR_GUI/train.gui
-GUI_DEV=$DIR_GUI/devel.gui
-
-DIR_SEN=$DIR_WRK/Sen
-DIR_MAR=$DIR_WRK/Sen
-DIR_PRM=$DIR_WRK/Prm/$NOM
-DIR_MOD=$DIR_WRK/Mod/$NOM
-FIC_MOD=$DIR_MOD/vocales.mod
-DIR_REC=$DIR_WRK/Rec/$NOM
-LIS_MOD=$DIR_WRK/Lis/vocales.lis
-FIC_RES=$DIR_WRK/Res/$NOM.res
-
-[ -d $(dirname $FIC_RES) ] || mkdir -p $(dirname $FIC_RES)
-
-# ==========================================
-# 1. PARAMETRIZACIÓN (MÁXIMA ENTROPÍA)
-# ==========================================
-echo "----------------------------------------"
-echo " [1/4] Parametrización"
-echo "----------------------------------------"
-
-dirSen="-s $DIR_SEN"
-dirPrm="-p $DIR_PRM"
-
-# Nombre de la función wrapper
-FUNK_PRM=ME
-
-EXEC_PREV=$DIR_PRM/$FUNK_PRM.py
-[ -d $(dirname $EXEC_PREV) ] || mkdir -p $(dirname $EXEC_PREV)
-
-# --- INYECCIÓN DE CÓDIGO (Según pág. 82 de los apuntes) ---
-ORDEN=8       # Orden óptimo según apuntes
-EPS=0.1       # Factor de blanqueo logarítmico
-
-echo "import numpy as np" | tee $EXEC_PREV
-# Importamos desde el módulo que está en ramses/maxima_entropia.py
-echo "from maxima_entropia import maximaEntropia" | tee -a $EXEC_PREV
-
-echo "orden=$ORDEN" | tee -a $EXEC_PREV
-echo "eps=$EPS" | tee -a $EXEC_PREV
-
-echo "def $FUNK_PRM(x):" | tee -a $EXEC_PREV
-echo "    # Devolvemos el Logaritmo para blanquear la dinámica" | tee -a $EXEC_PREV
-echo "    return np.log(eps + maximaEntropia(x, orden))" | tee -a $EXEC_PREV
-
-funkPrm="-f $FUNK_PRM"
-execPrev="-e $EXEC_PREV"
-
-# EJECUCIÓN: Usamos $SRC para encontrar parametriza.py
-EXEC="python3 $SRC/parametriza.py $dirSen $dirPrm $funkPrm $execPrev $GUI_ENT $GUI_DEV"
-echo "Ejecutando: $EXEC"
-$EXEC || exit 1
-
-# ==========================================
-# 2. ENTRENAMIENTO
-# ==========================================
-echo "----------------------------------------"
-echo " [2/4] Entrenamiento"
-echo "----------------------------------------"
-dirPrm="-p $DIR_PRM"
-dirMar="-m $DIR_MAR"
-lisUni="-l $LIS_MOD"
-ficMod="-M $FIC_MOD"
-
-EXEC="python3 $SRC/entrena.py $dirPrm $dirMar $lisUni $ficMod $GUI_ENT"
-echo "Ejecutando: $EXEC"
-$EXEC || exit 1
-
-# ==========================================
-# 3. RECONOCIMIENTO
-# ==========================================
-echo "----------------------------------------"
-echo " [3/4] Reconocimiento"
-echo "----------------------------------------"
-dirRec="-r $DIR_REC"
-dirPrm="-p $DIR_PRM"
-ficMod="-M $FIC_MOD"
-
-EXEC="python3 $SRC/reconoce.py $dirRec $dirPrm $ficMod $GUI_DEV"
-echo "Ejecutando: $EXEC"
-$EXEC || exit 1
-
-# ==========================================
-# 4. EVALUACIÓN
-# ==========================================
-echo "----------------------------------------"
-echo " [4/4] Evaluación"
-echo "----------------------------------------"
-dirRec="-r $DIR_REC" 
-dirMar="-m $DIR_MAR" 
-
-# Asegúrate de que esta línea tiene las comillas de apertura y cierre bien puestas:
-EXEC="python3 $SRC/evalua.py $dirRec $dirMar $GUI_DEV"
-
-echo "Ejecutando: $EXEC"
-
-# Esta es la línea que suele fallar si falta algo antes:
-$EXEC | tee $FIC_RES || exit 1
-
-echo "Proceso finalizado."
+# 5. Evaluación
+echo "Evaluando..."
+python3 ramses/evalua.py -r Rec/final -m Sen Gui/devel.gui

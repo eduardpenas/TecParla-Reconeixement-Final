@@ -1,77 +1,98 @@
 #! /usr/bin/env python3
 
-from ramses.util import * 
-from ramses.mar import * 
+import sys
+import os
+import numpy as np
 from tqdm import tqdm
+
+# --- FIX PATH: Para que encuentre el paquete 'ramses' ---
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+# --------------------------------------------------------
 
 from ramses.util import *
-from ramses.mar import *  
-from tqdm import tqdm
-def evalua(dirRec, dirMar, *guiSen):
-    """
-    Calcula la tasa de exactitud en el reconocimiento 
-    """
-    matCnf = {}
-    lisPal = set()
-    for sen in tqdm(leeLis(*guiSen)):
-        pathRec = pathName(dirRec, sen, '.rec')
-        rec = cogeTrn(pathRec)
-        pathMar = pathName(dirMar, sen, '.mar')
-        mar = cogeTrn(pathMar)
-        if not mar in matCnf:
-            matCnf[mar] = {rec: 1}
-        elif not rec in matCnf[mar]:
-            matCnf[mar][rec] = 1
-        else:
-            matCnf[mar][rec] += 1
-        lisPal |= {rec, mar}
+from ramses.mar import * # Importante para cogeTrn
 
-    for rec in sorted(lisPal):
-        print(f'\t{rec}', end='')
-    print()
-    for mar in sorted(lisPal):
-        print(f'{mar}',end='')
-        for rec in sorted(lisPal):
-            if mar in matCnf and rec in matCnf[mar]:
-                conf = matCnf[mar][rec] 
-            else : 
-                conf = 0
-            print(f'\t{conf}',end='')
-        print()
+def evalua(dirRec, dirMar, *ficGui):
+    """
+    Evalúa los resultados del reconocimiento.
+    Calcula la matriz de confusión y el porcentaje de exactitud.
+    """
+    vocales = ['a', 'e', 'i', 'o', 'u']
+    mapa_vocales = {v: i for i, v in enumerate(vocales)}
+    matriz = np.zeros((5, 5), dtype=int)
+    
+    total = 0
+    aciertos = 0
+    
+    lista_ficheros = leeLis(*ficGui)
+    
+    print(f"Evaluando {len(lista_ficheros)} señales...")
+    
+    for señal in tqdm(lista_ficheros):
+        # 1. Leer Ground Truth (Etiqueta Real)
+        pathMar = pathName(dirMar, señal, 'mar')
+        if not os.path.exists(pathMar): 
+            continue
+            
+        try:
+            real = cogeTrn(pathMar).lower()
+        except:
+            continue
+        
+        # 2. Leer Predicción (Etiqueta Reconocida)
+        pathRec = pathName(dirRec, señal, 'rec')
+        if not os.path.exists(pathRec): 
+            # Si no hay fichero, cuenta como error
+            total += 1
+            continue
+            
+        try:
+            with open(pathRec, 'r') as f:
+                reconocido = f.read().strip().lower()
+        except:
+            total += 1
+            continue
+            
+        # 3. Actualizar estadísticas
+        if real in mapa_vocales and reconocido in mapa_vocales:
+            idx_real = mapa_vocales[real]
+            idx_rec = mapa_vocales[reconocido]
+            matriz[idx_real, idx_rec] += 1
+            
+            if real == reconocido:
+                aciertos += 1
+            total += 1
 
-    total = cor = 0
-    for mar in lisPal:
-        for rec in lisPal:
-            total += matCnf[mar][rec] if mar in matCnf and rec in matCnf[mar] else 0
-            if mar == rec:
-                cor += matCnf[mar][rec] if mar in matCnf and rec in matCnf[mar] else 0
-    print(f'exact = {cor/total:.2%}')
+    # Mostrar Resultados
+    print("\n" + "="*45)
+    print("MATRIZ DE CONFUSIÓN (Filas=Real, Cols=Rec)")
+    print("="*45)
+    print("\t" + "\t".join(vocales))
+    print("-" * 45)
+    for i, v_real in enumerate(vocales):
+        row_str = f"{v_real}\t" + "\t".join([str(matriz[i, j]) for j in range(5)])
+        print(row_str)
+    print("-" * 45)
+        
+    exactitud = (aciertos / total * 100) if total > 0 else 0.0
+    print(f"Exactitud Global = {exactitud:.2f}%")
 
 if __name__ == "__main__":
     from docopt import docopt
-    import sys
-
+    
     usage=f"""
-
+Evalúa el reconocimiento de vocales
 
 usage:
     {sys.argv[0]} [options] <guia> ...
-    {sys.argv[0]} -h | --help
-    {sys.argv[0]} --version
 
 options:
-    -r, --dirRec PATH  Directorio con los ficheros del resultado [default: .]
-    -m, --dirMar PATH  Directorio con el contenido del fonético de las señales [default: .]
-"""
+    -r, --dirRec PATH   Directorio con los resultados del reconocimiento [default: .]
+    -m, --dirMar PATH   Directorio con las marcas correctas (Ground Truth) [default: .]
+    """
+    args = docopt(usage, version="ramses-eval-v2")
     
-    args = docopt(usage, version="tecparla2025")
-    dirRec = args["--dirRec"]
-    dirMar = args["--dirMar"]
-    guiSen = args["<guia>"]
-    evalua(dirRec, dirMar, *guiSen)
-
-    
-
-
-
-
+    evalua(args["--dirRec"], args["--dirMar"], *args["<guia>"]) 

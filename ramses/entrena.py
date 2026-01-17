@@ -1,123 +1,100 @@
 #! /usr/bin/env python3
 
+import sys
+import os
+import argparse
 import numpy as np
 from tqdm import tqdm
-import sys
-import pickle
-import os
+from datetime import datetime as dt
 
-# --- CORRECCIÓN: Imports separados línea por línea ---
+# Fix path para encontrar módulos locales
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
 from ramses.util import *
-from ramses.prm import * from ramses.mar import * from ramses.mod import *
-from ramses.euclidio import Euclidio
-from ramses.gaussiano import Gauss
-# -----------------------------------------------------
+from ramses.mod import *
 
-# Importamos nuestra nueva clase GMM de forma segura
+# Imports para evaluación dinámica
 try:
-    from ramses.gmm import GMM
+    from ramses.gaussiano import Gauss
+    from ramses.gmm import GMM, ModGMM
+    from ramses.red_pt import ModPT
+    from ramses.mlp import mlp_N
+    import torch
 except ImportError:
-    GMM = None 
+    pass 
 
-def entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui, ClsMod=Gauss, nmix=1, iteraciones=1):
-    """
-    Entrena el modelo acústico con soporte para iteraciones EM (GMM)
-    """
-    print(f"--- Iniciando Entrenamiento ({ClsMod.__name__}) ---")
-    if ClsMod.__name__ == 'GMM':
-        print(f"    Configuración: {nmix} gaussianas, {iteraciones} iteraciones.")
-
-    # 1. Cargar datos en memoria (Cache) para acelerar las iteraciones
-    print(">> Cargando datos de entrenamiento en memoria...")
-    datos_cache = []
+def entrena(modelo, lotesEnt, lotesDev=None, nomMod=None, numEpo=1):
+    print(f'--- Inicio entrenamiento: {numEpo} épocas ({dt.now():%H:%M:%S}) ---')
     
-    lista_ficheros = leeLis(*ficGui)
-    
-    for señal in tqdm(lista_ficheros): 
-        # leemos señal y marca
-        pathPrm = pathName(dirPrm, señal, 'prm')
-        prm = leePrm(pathPrm)
-        pathMar = pathName(dirMar, señal, 'mar')
-        unidad = cogeTrn(pathMar)
-        
-        # Guardamos en la lista
-        datos_cache.append((prm, unidad))
+    for epo in range(numEpo):
+        # 1. Fase de Entrenamiento
+        if hasattr(modelo, 'inicEntr'):
+            modelo.inicEntr()
+            
+        # Barra de progreso
+        pbar = tqdm(lotesEnt, desc=f"Epo {epo+1}/{numEpo}", leave=False)
+        for lote in pbar:
+            # Batch Processing (Deep Learning) vs Single Item (GMM)
+            if hasattr(modelo, 'batch_add'):
+                modelo.batch_add(lote)
+            else:
+                for senal in lote:
+                    modelo + senal 
+            
+            # Actualizar pesos
+            if hasattr(modelo, 'recaMod'):
+                modelo.recaMod()
 
-    # 2. Inicializamos el modelo
-    if ClsMod.__name__ == 'GMM':
-        modelo = ClsMod(lisMod=lisUni, nmix=nmix)
-    else:
-        modelo = ClsMod(lisMod=lisUni)
+        # 2. Fase de Evaluación
+        if lotesDev:
+            if hasattr(modelo, 'inicEval'): modelo.inicEval()
+            for lote in lotesDev:
+                if hasattr(modelo, 'batch_eval'):
+                    modelo.batch_eval(lote)
+                else:
+                    for senal in lote:
+                        if hasattr(modelo, 'addEval'): modelo.addEval(senal)
+            
+            if hasattr(modelo, 'recaEval'): modelo.recaEval()
+            if hasattr(modelo, 'printEval'): modelo.printEval(epo)
 
-    # 3. Bucle de Entrenamiento (Iteraciones EM)
-    for i in range(iteraciones):
-        if iteraciones > 1:
-            # Barra de progreso opcional o print simple
-            pass 
-        
-        # a. Inicializar acumuladores (Paso previo al E)
-        modelo.inicMod()
+        # 3. Guardado intermedio
+        if nomMod:
+            modelo.escrMod(nomMod)
 
-        # b. Acumular estadísticas (Paso E) usando memoria
-        for prm, unidad in datos_cache:
-            modelo += prm, unidad
-
-        # c. Recalcular parámetros (Paso M)
-        modelo.calcMod()
-
-    # 4. Escribimos el modelo resultante
-    print(f">> Guardando modelo en {ficMod}")
-    modelo.escMod(ficMod)   
+    print(f'--- Fin entrenamiento ({dt.now():%H:%M:%S}) ---')
 
 if __name__ == "__main__":
-    from docopt import docopt
-    
-    usage=f"""
-Entrena un modelo acústico para el reconocimento de las vocales
+    # --- ARGPARSE: Mucho más robusto que docopt para strings complejos ---
+    parser = argparse.ArgumentParser(description='Entrena modelo acústico Ramses')
+    parser.add_argument('-e', '--numEpo', type=int, default=1, help='Número de épocas')
+    parser.add_argument('-x', '--execPrev', type=str, help='Script de configuración previa')
+    parser.add_argument('--lotesEnt', type=str, help='Nombre variable lotes entrenamiento')
+    parser.add_argument('--lotesDev', type=str, help='Nombre variable lotes desarrollo')
+    parser.add_argument('-M', '--modelo', type=str, help='Definición del modelo (Python string)')
+    parser.add_argument('nomMod', type=str, help='Fichero de salida (.mod)')
 
-usage:
-    {sys.argv[0]} [options] <guia> ...
-    {sys.argv[0]} -h | --help
-    {sys.argv[0]} --version
+    args = parser.parse_args()
 
-options:
-    -p, --dirPrm PATH   Directorio con las señales parametrizadas [default: .]
-    -m, --dirMar PATH   Directorio con el contenido del fonético de las señales [default: .]
-    -l, --lisUni PATH   Fichero con la lista de unidades fométicas [default: Lis/vocales.lis]
-    -M, --ficMod PATH   Fichero con el modelo resultante [default: Mod/vocales.mod]
-    -e, --execPrev SCRIPT  script de ejecución previa 
-    -C, --classMod CLASS   Clase que implementa el modelado acústico (Gauss, GMM) [default: Gauss]
-    --nmix INT             Número de gaussianas (solo para GMM) [default: 1]
-    --iter INT             Número de iteraciones EM (solo para GMM) [default: 10]
-    """
+    # 1. Ejecutar configuración previa en el entorno GLOBAL
+    if args.execPrev:
+        with open(args.execPrev) as f:
+            exec(f.read(), globals())
+        
+    # 2. Obtener lotes del entorno global
+    lotesEnt = eval(args.lotesEnt) if args.lotesEnt else []
+    lotesDev = eval(args.lotesDev) if args.lotesDev else None
     
-    args = docopt(usage, version="tecparla2025")
-    dirPrm = args["--dirPrm"]
-    dirMar = args["--dirMar"]
-    lisUni = args["--lisUni"]
-    ficMod = args["--ficMod"]
-    ficGui = args["<guia>"]
-    
-    # Gestionar argumentos opcionales con defaults seguros
-    nmix = int(args["--nmix"]) if args["--nmix"] else 1
-    iteraciones = int(args["--iter"]) if args["--iter"] else 10
-
-    if args["--execPrev"]: exec(open(args["--execPrev"]).read())
-    
-    cls_name = args["--classMod"]
-    
-    # Lógica de selección de clase
-    if cls_name == 'GMM':
-        if GMM is None:
-            sys.exit("Error Crítico: No se encuentra ramses/gmm.py o tiene errores.")
-        clsMod = GMM
-    elif cls_name:
-        clsMod = eval(cls_name)
+    # 3. Construir modelo
+    if args.modelo:
+        modelo = eval(args.modelo)
+    elif 'modelo' in globals():
+        modelo = globals()['modelo']
     else:
-        clsMod = Gauss
-    
-    # Optimización: 1 iteración si no es GMM
-    if cls_name != 'GMM':
-        iteraciones = 1
+        sys.exit("Error: Debes especificar un modelo con -M o definir 'modelo' en execPrev.")
 
-    entrena(dirPrm, dirMar, lisUni, ficMod, *ficGui, ClsMod=clsMod, nmix=nmix, iteraciones=iteraciones)
+    # 4. Entrenar
+    entrena(modelo, lotesEnt, lotesDev, args.nomMod, args.numEpo)

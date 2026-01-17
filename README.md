@@ -1,56 +1,8 @@
 Ejercicio Final de TecParla
 ===========================
+Eduard Peñas Balart 
 
-El alumno debe realizar un *fork* del repositorio GitHub del trabajo final. A partir de ese momento, deberá trabajar
-con una copia local de su fork.
-
-Los resultados solicitados se incluirán en el fichero `README.md` del repositorio. Es decir, deberá sustituir este
-enunciado por su documento. La calidad y *belleza* del documento influirá en gran medida en la nota obtenida.
-
-La entrega consistirá en un *pull-request* con el resultado y una defensa oral del mismo.
-
-Objetivos del ejercicio
------------------------
-
-Los objetivos principales del ejercicio final son:
-
-- Construir un sistema de reconocimiento de vocales tan preciso como sea posible
-- Implementar técnicas de extracción de características y modelado acústico no vistas en clase
-- Presentar los resultados en un repositorio de GitHub que convenza al potencial comprador de la calidad del
-  producto
-
-Tareas a realizar
------------------
-
-### Técnicas de extracción de características
-
-Se deberán implementar dos técnicas de extracción de características no vistas en las clases pero sí
-explicadas en los apuntes:
-
-- Estimación espectral de Máxima Entropía
-- Coeficiente cepstrales en escala Mel (MFCC)
-
-#### Implementación del estimador de Máxima Entropía
-
-Se implementará el estimador de Máxima Entropía y se optimizará el orden del análisis LPC.
-
-Deberá justificarse la elección del orden mediante gráficas y tablas (es decir, tanto gráficas como
-tablas) que muestren con claridad la exactitud alcanzada en función de los valores de ambos parámetros.
-
-Por ejemplo:
-
-![ceps.png](imágenes/ceps-orden-gauss.png)
-
-y
-
-![eps.png](imágenes/eps.png)
-
-También se deberá presentar una figura con seis gráficas que muestren el modelo de cada una de las cinco
-vocales y la comparación de las cinco. Algo semejante a la figura siguiente:
-
-![Modelos usando Máxima Entropía](imágenes/modME.png)
-
-# Implementación del Estimador de Máxima Entropía (EDUARD)
+# A. Implementación del Estimador de Máxima Entropía
 
 En esta práctica se ha implementado el estimador espectral basado en el principio de Máxima Entropía (Método de Burg/Yule-Walker) para el reconocimiento de vocales. Se han optimizado los hiperparámetros fundamentales del sistema: el orden del filtro LPC y el factor de blanqueo ($\epsilon$).
 
@@ -101,7 +53,7 @@ El estimador de Máxima Entropía genera espectros suaves (sin el ruido caracter
 * **Separabilidad:** En la gráfica comparativa (inferior derecha), se aprecia cómo los modelos ocupan diferentes regiones espectrales. Por ejemplo, la vocal /i/ (línea azul) presenta un primer formante muy bajo y un segundo muy alto, diferenciándose claramente de la /a/ (línea roja) que tiene la energía más centrada. Esto justifica la alta tasa de acierto del sistema (>83%).|
 -----------------------------------------------------
 
-#### Utilización de los coeficientes cepstrales en escala Mel (MFCC) (EDUARD)
+#### Utilización de los coeficientes cepstrales en escala Mel (MFCC)
 
 Se usará la biblioteca `python_speech_features` para incorporar a `ramses` los coeficientes MFCC. En la sección
 4.4.3 de los apuntes hay una explicación de estos coeficientes, aunque no se proporciona su implementación detallada.
@@ -110,7 +62,7 @@ Deberán optimizarse todos los parámetros involucrados en el cálculo de los MF
 la mejor combinación del número de coeficientes y del número de bandas del banco de filtros.
 
 Para el número de coeficientes y de bandas deberá aportarse justificación gráfica adecuada para apoyar la elección.
-# Utilización de los Coeficientes Cepstrales en Escala Mel (MFCC)
+# B. Utilización de los Coeficientes Cepstrales en Escala Mel (MFCC)
 
 Para mejorar el reconocimiento, se ha sustituido la parametrización LPC por **MFCC** (Mel-Frequency Cepstral Coefficients). Este método imita la percepción auditiva humana utilizando un banco de filtros espaciados logarítmicamente (Escala Mel) y decorrela las características mediante la Transformada Discreta del Coseno (DCT).
 
@@ -137,68 +89,103 @@ La gráfica muestra un comportamiento interesante con dos picos de rendimiento:
 
 **Conclusión MFCC:** La configuración final seleccionada es **NumCep=18** y **NFilt=20**, alcanzando una exactitud del **92.7%**, superando ampliamente al estimador de Máxima Entropía.
 
-### Modelado acústico
+# C. Modelado Estadístico con Mezcla de Gaussianas (GMM)
 
-Se implementarán dos técnicas de modelado acústico no vistas durante el curso, pero de las cuales se proporcionan
-apuntes:
+Tras optimizar la parametrización utilizando coeficientes MFCC, el siguiente paso para mejorar la robustez del sistema ha sido sustituir el modelado unimodal (una única media y varianza por vocal) por un modelo probabilístico más potente: los **Modelos de Mezcla de Gaussianas (GMM)**.
 
-- Modelo de mezcla de Gaussianas
-- Redes neuronales usando PyTorch
+Tal y como se describe en la teoría, la distribución acústica real de una vocal no suele seguir una única campana de Gauss perfecta debido a la variabilidad inherente del habla (género del locutor, acento, coarticulación). Un GMM permite modelar esta densidad compleja mediante la suma ponderada de varias gaussianas:
 
-#### Modelo de mezcla de Gaussianas
+$$f(x|\lambda) = \sum_{k=1}^{M} c_k \mathcal{N}(x, \mu_k, \Sigma_k)$$
 
-Se implementará el modelo de mezcla de gaussianas presentado en el apartado 5.4 de los apuntes.
+Para el entrenamiento de los parámetros $(\mu_k, \Sigma_k, c_k)$, se ha implementado el algoritmo **EM (Expectation-Maximization)**, que itera entre estimar la probabilidad de pertenencia de cada dato a una gaussiana (Paso E) y recalcular los parámetros para maximizar la verosimilitud (Paso M).
 
-Será necesario implementar una inicialización de las gaussianas, para lo que se propone el siguiente:
+## Diseño del Experimento
 
-- La covarianza de las `N` gaussianas del modelo de cada vocal será la misma e igual a la covarianza del conjunto
-  de realizaciones de entrenamiento. Se utilizarán matrices de covarianza diagonales.
-- Como media de las `N` gaussianas de la mezcla se tomarán `N` señales aleatorias de la correspondiente vocal.
+* **Características de entrada:** Configuración óptima de MFCC (18 coeficientes, 20 filtros).
+* **Inicialización:** Se utilizaron medias aleatorias seleccionadas del conjunto de entrenamiento y matrices de covarianza diagonales inicializadas con la varianza global, conforme a las especificaciones del apartado 5.4.
+* **Variable de optimización:** Se varió el número de gaussianas por mezcla (`nmix`) en potencias de 2 (desde 1 hasta 32).
 
-Esta inicialización es sub-óptima pero razonable y sencilla; se invita al alumno a implementar una más potente.
+## Resultados Obtenidos
 
-Deberá optimizarse el número de gaussianas por mezcla y apoyar la elección con gráficas y tablas adecuadas.
+| N.º Gaussianas (`nmix`) | Exactitud (%) | Mejora relativa |
+| :---: | :---: | :---: |
+| **1** | 92.90 % | - |
+| **2** | 92.80 % | -0.10 % |
+| **4** | 95.65 % | **+2.85 %** |
+| **8** | **95.85 %** | +0.20 % |
+| **16** | 95.55 % | -0.30 % |
+| **32** | 95.80 % | +0.25 % |
 
-#### Modelado usando redes neuronales
+![Gráfica de Exactitud vs Número de Gaussianas](gmm_exactitud_vs_nmix.png)
+*Figura 5: Evolución de la exactitud del sistema en función del número de gaussianas por mezcla.*
 
-Incorporación de redes neuronales implementadas con PyTorch a `ramses`. Dispone de una explicación de cómo hacerlo
-en el fichero `neuras.pdf`.
+## Análisis y Discusión
 
-Deberá implementar el perceptrón multicapa y optimizar:
+1.  **El salto de la multimodalidad (N=2 a N=4):**
+    Se observa un incremento drástico en la exactitud (casi un 3%) al pasar de 2 a 4 gaussianas. Esto confirma la limitación del modelo unimodal. Con 4 gaussianas, el sistema empieza a ser capaz de separar subgrupos naturales dentro de la nube de puntos de cada vocal. Un ejemplo típico es la separación espectral entre voces masculinas y femeninas, o variantes alofónicas de la misma vocal.
 
-- Número de capas del perceptrón.
-- Número de neuronas por capa.
-- Función de activación: sigmoide o ReLU.
+2.  **El punto óptimo (N=8):**
+    El máximo rendimiento global se alcanza con **8 gaussianas**, logrando una exactitud del **95.85%**. Este valor representa el equilibrio ideal donde el modelo tiene suficiente flexibilidad para capturar los matices finos de la pronunciación sin aumentar innecesariamente la complejidad.
 
-### Optimización de la exactitud del reconocimiento
+3.  **Saturación y Sobreajuste (N > 8):**
+    Al aumentar la complejidad a 16 y 32 gaussianas, la exactitud se estanca e incluso oscila ligeramente a la baja (95.55%).
+    * Esto indica que añadir más componentes no aporta nueva información fonética relevante.
+    * Existe un riesgo de **sobreajuste (overfitting)**: con demasiadas gaussianas para la cantidad de datos disponibles, el modelo empieza a "memorizar" el ruido específico o las particularidades de los locutores de entrenamiento en lugar de generalizar la forma de la vocal, lo que penaliza el rendimiento en el conjunto de test.
 
-Deberá seleccionarse el mejor sistema posible, usando la combinación de técnicas y parámetros que se consideren óptimos.
-Este sistema será el implementado al ejecutar el script `ramses/todo.sh` sin modificaciones ni argumentos. Es decir, el
-profesor ejecutará la orden `ramses/todo.sh` y el resultado que se obtenga será el resultado que considere de cara a la
-evaluación del trabajo.
+## Conclusión
 
-Evaluación del trabajo
-----------------------
+La configuración final seleccionada para el sistema Ramsés utiliza una parametrización **MFCC (18 coef, 20 filtros)** junto con un modelado **GMM de 8 gaussianas**, alcanzando una tasa de acierto final del **95.85%**.
 
-La evaluación del trabajo presentado considerará los aspectos siguientes; más o menos en la misma medida:
+# D. Optimización Final y Análisis de Resultados (Deep Learning)
 
-- Completitud del trabajo. No se supone que se consiga completar todos los apartados, pero sí será necesario para obtener
-  en este aspecto la máxima nota.
-- Exactitud alcanzada. Este aspecto es competitivo: en principio, el alumno que consiga la máxima exactitud obtendrá un
-  10 en el mismo; el alumno que consiga el peor reaultado, obtendrá un 0.
-  - En caso de pocos alumnos o resultados *complicados*, también se tendrá en cuenta el resultado obtenido con el
-    sistema desarrollado en clase.
-- Originalidad del trabajo. Se tendrá en cuenta el *excesivo* parecido entre trabajos distintos. También se valorará la
-  *excesiva* dependencia de herramientas de inteligencia artificial.
-  - Las dos cuestiones combinadas llevan al consejo de, si usáis IA, procurad usar una distinta a los compañeros.
-- Calidad de la presentación en la página de GitHub; es decir, la calidad del documento `README.md`, con sus gráficas,
-  tablas y demás adornos que hagan de él una buena herramienta de venta.
-- Presentación oral del trabajo y defensa del mismo.
+Como culminación del proyecto, se ha desarrollado un sistema de modelado acústico basado en **Redes Neuronales Artificiales (ANN)** utilizando el framework PyTorch. El objetivo era superar la barrera de rendimiento impuesta por los modelos estadísticos tradicionales (GMM) mediante el aprendizaje de características no lineales.
 
-Entrega y presentación oral
----------------------------
+Para alcanzar el máximo rendimiento posible (**96.75%**), se implementó una estrategia de entrenamiento avanzada denominada "Configuración Turbo", integrando técnicas del estado del arte en Deep Learning para garantizar la convergencia y la generalización del modelo.
 
-Una vez completado, el alumno realizará un *pull-request* no más tarde del viernes 16 de enero a medianoche. El lunes
-19 de enero se realizará una presentación/defensa del trabajo usando la sala Meet de la asignatura. La duración de la
-defensa será de unos diez minutos de presentación por parte del alumno, seguidos de otros diez dedicados a preguntas y
-respuestas.
+## 5.1. Arquitectura y Configuración del Sistema
+
+A diferencia de los modelos paramétricos simples, este sistema aprende a extraer patrones complejos directamente de los coeficientes MFCC. La configuración óptima resultante de la búsqueda de hiperparámetros fue:
+
+* **Arquitectura:** MLP (Perceptrón Multicapa) con topología *Feed-Forward*.
+* **Dimensiones:** 2 Capas (Entrada $\to$ Oculta de **128 neuronas** $\to$ Salida). Se aumentó la capa oculta de 64 a 128 neuronas para incrementar la capacidad de abstracción de la red.
+* **Optimizador:** **Adam** (Adaptive Moment Estimation), seleccionado por su capacidad de adaptar la tasa de aprendizaje dinámicamente, superando al SGD clásico en velocidad de convergencia.
+* **Regularización y Estabilidad:**
+    * **Batch Normalization (1D):** Aplicado a la entrada para normalizar la distribución de los MFCCs, evitando la saturación de gradientes y permitiendo un aprendizaje más agresivo.
+    * **Data Shuffling:** Barajado aleatorio de los mini-lotes (*batch size=64*) en cada época para romper la correlación temporal de los datos y asegurar un descenso de gradiente estocástico real.
+
+## 5.2. Dinámica del Entrenamiento
+
+El modelo fue entrenado durante **400 épocas**. Como se observa en la gráfica siguiente, la inclusión de *Batch Normalization* permitió una curva de aprendizaje suave y constante. 
+
+Se observa que el modelo alcanza su pico de rendimiento (**96.85%**) alrededor de la época 385, estabilizándose finalmente en un **96.75%**. Esta mínima oscilación final (0.1%) indica que el modelo ha alcanzado su capacidad máxima de aprendizaje sin entrar en un sobreajuste (overfitting) destructivo.
+
+![Curva de Aprendizaje del Modelo](grafica_curva_aprendizaje.png)
+*Figura 1: Evolución del entrenamiento. Se observa la convergencia asintótica del modelo y la estabilidad del Loss en las últimas 100 épocas.*
+
+## 5.3. Comparativa Global de Sistemas
+
+El proyecto ha seguido una evolución incremental, desde algoritmos básicos hasta inteligencia artificial moderna. La siguiente tabla resume el salto cualitativo obtenido:
+
+| Sistema | Tecnología Base | Exactitud Final | Análisis |
+| :--- | :--- | :---: | :--- |
+| **Básico** | Distancia Euclídea | ~83.00% | Modelo ingenuo, insuficiente para variabilidad real. |
+| **Intermedio** | GMM (8 Gaussianas) | 95.85% | Modelo estadístico robusto. |
+| **Avanzado** | **Deep Learning (MLP)** | **96.75%** | **SOTA (State of the Art). Supera la barrera estadística.** |
+
+![Comparativa de Modelos](grafica_comparativa_modelos.png)
+*Figura 2: Comparativa de rendimiento. El sistema de Deep Learning logra reducir el error residual del GMM en casi un 1% absoluto.*
+
+## 5.4. Análisis Detallado de Errores
+
+Para validar la robustez del sistema, se ha analizado la **Matriz de Confusión** final sobre el conjunto de desarrollo (2000 muestras).
+
+![Matriz de Confusión Final](grafica_matriz_confusion.png)
+*Figura 3: Matriz de confusión del sistema optimizado.*
+
+**Discusión de Resultados:**
+1.  **Robustez en Vocales Anteriores:** Las vocales **/e/** y **/i/** presentan una tasa de acierto casi perfecta (>99%). Esto indica que la red ha aprendido a separar perfectamente sus formantes característicos.
+2.  **El Desafío /o/ - /u/:** El único error sistemático residual se encuentra en la confusión entre las vocales posteriores **/o/** y **/u**. Acústicamente, estas vocales comparten un primer formante (F1) muy bajo y cercano. Aun así, el sistema de Deep Learning ha minimizado este error mejor que el GMM.
+
+## 5.5. Conclusión Final
+
+La implementación de un Perceptrón Multicapa optimizado con **Batch Normalization** y **Adam** ha demostrado ser superior a los enfoques clásicos. El sistema final obtiene una exactitud del **96.75%**, demostrando una estabilidad matemática y una capacidad de generalización idóneas para tareas de reconocimiento de vocales de alta precisión.
