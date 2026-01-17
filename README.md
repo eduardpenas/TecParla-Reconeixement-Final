@@ -80,7 +80,7 @@ El experimento determinó que **18 coeficientes** proporcionan el mejor rendimie
 Manteniendo los 18 coeficientes óptimos, se procedió a ajustar el número de filtros del banco triangular Mel.
 
 ![Exactitud vs Filtros](mfcc_exactitud_vs_nfilt.png)
-*Figura 4: Optimización del número de filtros para numcep=18.*
+*Figura 3: Optimización del número de filtros para numcep=18.*
 
 **Análisis:**
 La gráfica muestra un comportamiento interesante con dos picos de rendimiento:
