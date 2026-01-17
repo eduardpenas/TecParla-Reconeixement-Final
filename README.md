@@ -10,7 +10,7 @@ En esta práctica se ha implementado el estimador espectral basado en el princip
 
 El primer experimento consistió en evaluar la dependencia de la exactitud del sistema en función del orden del filtro de predicción lineal. El objetivo es encontrar un compromiso entre la capacidad de modelado y la generalización.
 
-![Gráfica de Exactitud vs Orden](exactitud_vs_orden.png)
+![Gráfica de Exactitud vs Orden](imágenes/exactitud_vs_orden.png)
 *Figura 1: Evolución de la exactitud (%) en función del orden del análisis LPC.*
 
 ### Análisis de resultados
@@ -44,7 +44,7 @@ Se observa una relación inversa entre el valor de $\epsilon$ y la exactitud:
 
 Utilizando la configuración óptima (**Orden=8, $\epsilon$=0.1**), se han generado los modelos espectrales promedio para las cinco vocales.
 
-![Modelos espectrales de las vocales](modelos_vocales_orden_8.png)
+![Modelos espectrales de las vocales](imágenes/modelos_vocales_orden_8.png)
 *Figura 2: Estimación espectral de Máxima Entropía para las 5 vocales y comparativa conjunta.*
 
 ### Interpretación Visual
@@ -79,7 +79,7 @@ El experimento determinó que **18 coeficientes** proporcionan el mejor rendimie
 
 Manteniendo los 18 coeficientes óptimos, se procedió a ajustar el número de filtros del banco triangular Mel.
 
-![Exactitud vs Filtros](mfcc_exactitud_vs_nfilt.png)
+![Exactitud vs Filtros](imágenes/mfcc_exactitud_vs_nfilt.png)
 *Figura 3: Optimización del número de filtros para numcep=18.*
 
 **Análisis:**
@@ -116,7 +116,7 @@ Para el entrenamiento de los parámetros $(\mu_k, \Sigma_k, c_k)$, se ha impleme
 | **16** | 95.55 % | -0.30 % |
 | **32** | 95.80 % | +0.25 % |
 
-![Gráfica de Exactitud vs Número de Gaussianas](gmm_exactitud_vs_nmix.png)
+![Gráfica de Exactitud vs Número de Gaussianas](imágenes/gmm_exactitud_vs_nmix.png)
 *Figura 5: Evolución de la exactitud del sistema en función del número de gaussianas por mezcla.*
 
 ## Análisis y Discusión
@@ -159,7 +159,7 @@ El modelo fue entrenado durante **400 épocas**. Como se observa en la gráfica 
 
 Se observa que el modelo alcanza su pico de rendimiento (**96.85%**) alrededor de la época 385, estabilizándose finalmente en un **96.75%**. Esta mínima oscilación final (0.1%) indica que el modelo ha alcanzado su capacidad máxima de aprendizaje sin entrar en un sobreajuste (overfitting) destructivo.
 
-![Curva de Aprendizaje del Modelo](grafica_curva_aprendizaje.png)
+![Curva de Aprendizaje del Modelo](imágenes/grafica_curva_aprendizaje.png)
 *Figura 1: Evolución del entrenamiento. Se observa la convergencia asintótica del modelo y la estabilidad del Loss en las últimas 100 épocas.*
 
 ## 5.3. Comparativa Global de Sistemas
@@ -172,14 +172,14 @@ El proyecto ha seguido una evolución incremental, desde algoritmos básicos has
 | **Intermedio** | GMM (8 Gaussianas) | 95.85% | Modelo estadístico robusto. |
 | **Avanzado** | **Deep Learning (MLP)** | **96.75%** | **SOTA (State of the Art). Supera la barrera estadística.** |
 
-![Comparativa de Modelos](grafica_comparativa_modelos.png)
+![Comparativa de Modelos](imágenes/grafica_comparativa_modelos.png)
 *Figura 2: Comparativa de rendimiento. El sistema de Deep Learning logra reducir el error residual del GMM en casi un 1% absoluto.*
 
 ## 5.4. Análisis Detallado de Errores
 
 Para validar la robustez del sistema, se ha analizado la **Matriz de Confusión** final sobre el conjunto de desarrollo (2000 muestras).
 
-![Matriz de Confusión Final](grafica_matriz_confusion.png)
+![Matriz de Confusión Final](imágenes/grafica_matriz_confusion.png)
 *Figura 3: Matriz de confusión del sistema optimizado.*
 
 **Discusión de Resultados:**
