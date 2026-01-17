@@ -50,11 +50,55 @@ vocales y la comparación de las cinco. Algo semejante a la figura siguiente:
 
 ![Modelos usando Máxima Entropía](imágenes/modME.png)
 
-### Respuesta eduard: 
+# Implementación del Estimador de Máxima Entropía (EDUARD)
 
-| eps | 1e-05 | 0.1 | 1 | 10 | 100 | 1000 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| **Exac** | 84.55 % | 83.45 % | 80.05 % | 74.90 % | 70.65 % | 71.30 % |
+En esta práctica se ha implementado el estimador espectral basado en el principio de Máxima Entropía (Método de Burg/Yule-Walker) para el reconocimiento de vocales. Se han optimizado los hiperparámetros fundamentales del sistema: el orden del filtro LPC y el factor de blanqueo ($\epsilon$).
+
+## 1. Optimización del Orden del Análisis (LPC)
+
+El primer experimento consistió en evaluar la dependencia de la exactitud del sistema en función del orden del filtro de predicción lineal. El objetivo es encontrar un compromiso entre la capacidad de modelado y la generalización.
+
+![Gráfica de Exactitud vs Orden](exactitud_vs_orden.png)
+*Figura 1: Evolución de la exactitud (%) en función del orden del análisis LPC.*
+
+### Análisis de resultados
+Como se observa en la gráfica, la exactitud aumenta rápidamente con los primeros órdenes.
+* **Órdenes bajos ($N < 6$):** El modelo es incapaz de capturar los dos primeros formantes necesarios para distinguir las vocales, resultando en una baja exactitud.
+* **Órdenes medios ($N \approx 8$):** Se alcanza un rendimiento óptimo. El sistema modela correctamente la envolvente espectral sin ajustar detalles innecesarios.
+* **Órdenes altos:** Aumentar el orden más allá de 10-12 no aporta mejoras significativas y aumenta el coste computacional. Además, un orden excesivo podría empezar a modelar la estructura fina (el pitch) en lugar de solo la envolvente, lo que podría reducir la robustez (overfitting).
+
+**Conclusión:** Se selecciona **Orden = 8** como el valor óptimo para las siguientes etapas.
+
+---
+
+## 2. Dependencia con el Umbral Epsilon ($\epsilon$)
+
+El parámetro $\epsilon$ se utiliza en la transformación logarítmica $S_{log} = \log(\epsilon + S(\omega))$ para simular la percepción auditiva (escala logarítmica) y evitar inestabilidades numéricas. Fijando el orden en 8, se obtuvieron los siguientes resultados:
+
+| Epsilon ($\epsilon$) | 1e-05 | 0.1 | 1 | 10 | 100 | 1000 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Exactitud** | **84.55 %** | 83.45 % | 80.05 % | 74.90 % | 70.65 % | 71.30 % |
+
+### Análisis de resultados
+Se observa una relación inversa entre el valor de $\epsilon$ y la exactitud:
+1.  **Valores bajos:** Permiten una mayor dinámica en el espectro, resaltando los picos de los formantes. El mejor resultado numérico se obtiene con `1e-05` (84.55%).
+2.  **Valores altos:** Tienden a "blanquear" o aplanar el espectro, reduciendo la distancia euclídea entre los modelos de distintas vocales y empeorando la tasa de acierto.
+
+**Elección:** Aunque `1e-05` ofrece la máxima exactitud, se selecciona **$\epsilon = 0.1$** (83.45%) por ser un valor estándar que ofrece un excelente compromiso entre precisión y estabilidad numérica frente a silencios o señales de muy baja energía.
+
+---
+
+## 3. Modelado Espectral de las Vocales
+
+Utilizando la configuración óptima (**Orden=8, $\epsilon$=0.1**), se han generado los modelos espectrales promedio para las cinco vocales.
+
+![Modelos espectrales de las vocales](modelos_vocales_orden_8.png)
+*Figura 2: Estimación espectral de Máxima Entropía para las 5 vocales y comparativa conjunta.*
+
+### Interpretación Visual
+El estimador de Máxima Entropía genera espectros suaves (sin el ruido característico del periodograma), lo cual es ideal para el reconocimiento de patrones:
+* **Identificación de Formantes:** Se distinguen claramente los picos de resonancia (F1 y F2) que definen cada vocal.
+* **Separabilidad:** En la gráfica comparativa (inferior derecha), se aprecia cómo los modelos ocupan diferentes regiones espectrales. Por ejemplo, la vocal /i/ (línea azul) presenta un primer formante muy bajo y un segundo muy alto, diferenciándose claramente de la /a/ (línea roja) que tiene la energía más centrada. Esto justifica la alta tasa de acierto del sistema (>83%).|
 -----------------------------------------------------
 
 #### Utilización de los coeficientes cepstrales en escala Mel (MFCC)
