@@ -101,7 +101,7 @@ El estimador de Máxima Entropía genera espectros suaves (sin el ruido caracter
 * **Separabilidad:** En la gráfica comparativa (inferior derecha), se aprecia cómo los modelos ocupan diferentes regiones espectrales. Por ejemplo, la vocal /i/ (línea azul) presenta un primer formante muy bajo y un segundo muy alto, diferenciándose claramente de la /a/ (línea roja) que tiene la energía más centrada. Esto justifica la alta tasa de acierto del sistema (>83%).|
 -----------------------------------------------------
 
-#### Utilización de los coeficientes cepstrales en escala Mel (MFCC)
+#### Utilización de los coeficientes cepstrales en escala Mel (MFCC) (EDUARD)
 
 Se usará la biblioteca `python_speech_features` para incorporar a `ramses` los coeficientes MFCC. En la sección
 4.4.3 de los apuntes hay una explicación de estos coeficientes, aunque no se proporciona su implementación detallada.
@@ -110,6 +110,32 @@ Deberán optimizarse todos los parámetros involucrados en el cálculo de los MF
 la mejor combinación del número de coeficientes y del número de bandas del banco de filtros.
 
 Para el número de coeficientes y de bandas deberá aportarse justificación gráfica adecuada para apoyar la elección.
+# Utilización de los Coeficientes Cepstrales en Escala Mel (MFCC)
+
+Para mejorar el reconocimiento, se ha sustituido la parametrización LPC por **MFCC** (Mel-Frequency Cepstral Coefficients). Este método imita la percepción auditiva humana utilizando un banco de filtros espaciados logarítmicamente (Escala Mel) y decorrela las características mediante la Transformada Discreta del Coseno (DCT).
+
+Se ha utilizado la librería `python_speech_features` y se han optimizado los dos parámetros críticos en dos fases.
+
+## 1. Optimización del Número de Coeficientes (`numcep`)
+
+**Análisis:**
+El experimento determinó que **18 coeficientes** proporcionan el mejor rendimiento.
+* Un número bajo de coeficientes (<12) solo captura la envolvente espectral básica (formantes).
+* Al aumentar a 18, capturamos detalles espectrales finos necesarios para distinguir vocales confusas sin llegar a modelar el ruido de excitación (pitch), lo cual ocurriría con un número excesivo de coeficientes.
+
+## 2. Optimización del Banco de Filtros (`nfilt`)
+
+Manteniendo los 18 coeficientes óptimos, se procedió a ajustar el número de filtros del banco triangular Mel.
+
+![Exactitud vs Filtros](mfcc_exactitud_vs_nfilt.png)
+*Figura 4: Optimización del número de filtros para numcep=18.*
+
+**Análisis:**
+La gráfica muestra un comportamiento interesante con dos picos de rendimiento:
+* **Máximo global en 20 filtros:** Se alcanza una exactitud de **~92.7%**. Esto indica que, para la frecuencia de muestreo de 8kHz (ancho de banda 4kHz), un banco de filtros menos denso (20 filtros) es suficiente y quizás más robusto, evitando el solapamiento excesivo de bandas en altas frecuencias.
+* Se observa otro pico de rendimiento en 30 filtros, pero decae drásticamente al aumentar a 40, probablemente debido a que los filtros se vuelven demasiado estrechos y sensibles a variaciones no fonéticas.
+
+**Conclusión MFCC:** La configuración final seleccionada es **NumCep=18** y **NFilt=20**, alcanzando una exactitud del **92.7%**, superando ampliamente al estimador de Máxima Entropía.
 
 ### Modelado acústico
 
