@@ -50,6 +50,13 @@ vocales y la comparación de las cinco. Algo semejante a la figura siguiente:
 
 ![Modelos usando Máxima Entropía](imágenes/modME.png)
 
+### Respuesta eduard: 
+
+| eps | 1e-05 | 0.1 | 1 | 10 | 100 | 1000 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Exac** | 84.55 % | 83.45 % | 80.05 % | 74.90 % | 70.65 % | 71.30 % |
+-----------------------------------------------------
+
 #### Utilización de los coeficientes cepstrales en escala Mel (MFCC)
 
 Se usará la biblioteca `python_speech_features` para incorporar a `ramses` los coeficientes MFCC. En la sección

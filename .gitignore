@@ -4,3 +4,11 @@
 
 !ramses/
 Sen/
+Prm/
+Mod/
+Rec/
+Log/
+Res/
+Sen/
+__pycache__/
+*.pyc
