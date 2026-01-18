@@ -1,0 +1,13 @@
+import numpy as np
+from scipy.linalg import solve_toeplitz
+def lpc(x, orden=12):
+    # 1. Pre-énfasis (Filtro paso alto para realzar formantes)
+    x = np.append(x[0], x[1:] - 0.97 * x[:-1])
+    # 2. Ventana de Hamming (Evita fugas espectrales)
+    x = x * np.hamming(len(x))
+    # 3. Autocorrelación
+    n = len(x)
+    r = np.correlate(x, x, mode='full')[n-1:n+orden]
+    # 4. Levinson-Durbin (vía solve_toeplitz)
+    a = solve_toeplitz((r[:-1], r[:-1]), r[1:])
+    return a

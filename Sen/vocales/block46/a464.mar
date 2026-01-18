@@ -1,0 +1,4 @@
+LHD: SAM, 6.0
+SRC: test/a,64
+LBO: 0,,511,a
+ELF:

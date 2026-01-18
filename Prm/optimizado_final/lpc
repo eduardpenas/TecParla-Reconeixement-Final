@@ -1,0 +1,18 @@
+import numpy as np
+from scipy.linalg import solve_toeplitz
+def lpc(x, orden=14, num_ceps=20):
+    x = np.append(x[0], x[1:] - 0.97 * x[:-1]) # Pre-enfasis
+    x = x * np.hamming(len(x)) # Ventana
+    n = len(x)
+    r = np.correlate(x, x, mode='full')[n-1:n+orden+1]
+    a = solve_toeplitz((r[:-1], r[:-1]), r[1:])
+    a_full = np.concatenate(([1], -a))
+    c = np.zeros(num_ceps)
+    c[0] = np.log(r[0])
+    for m in range(1, num_ceps):
+        sum_val = 0
+        for k in range(1, m):
+            if k <= orden: sum_val += (k/m) * c[m-k] * a_full[k]
+        if m <= orden: c[m] = -a_full[m] - sum_val
+        else:          c[m] = -sum_val
+    return c
