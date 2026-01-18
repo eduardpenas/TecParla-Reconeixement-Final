@@ -116,7 +116,7 @@ Para el entrenamiento de los parámetros $(\mu_k, \Sigma_k, c_k)$, se ha impleme
 | **16** | 95.55 % | -0.30 % |
 | **32** | 95.80 % | +0.25 % |
 
-![Gráfica de Exactitud vs Número de Gaussianas](imágenes/gmm_exactitud_vs_nmix.png)
+![Gráfica de Exactitud vs Número de Gaussianas](imagenes/gmm_exactitud_vs_nmix.png)
 *Figura 5: Evolución de la exactitud del sistema en función del número de gaussianas por mezcla.*
 
 ## Análisis y Discusión
